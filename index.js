@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const cors = require('cors');
 const multer = require('multer');
 const { MongoClient, ServerApiVersion } = require('mongodb');
@@ -9,8 +10,9 @@ const port = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
+let count = 1;
 
-const UPLOAD_FOLDER = "./uploads/";
+const UPLOAD_FOLDER = "./uploads/"
 
 const upload = multer({
   storage: multer.diskStorage({
@@ -18,14 +20,15 @@ const upload = multer({
       cb(null, UPLOAD_FOLDER);
     },
     filename: function (req, file, cb) {
-      cb(null, `${Date.now()}_${Math.round(Math.random() * 1E9)}_${file.originalname}`);
+      const modifiedFileName = file.originalname.replace(/\s+/g, '_');
+    cb(null, `${Date.now()}_${Math.round(Math.random() * 1E9)}_${modifiedFileName}`);
     },
   }),
 });
 
 const fileUpload = upload.fields([
   { name: "mainFile", maxCount: 1 },
-  { name: "others", maxCount: 3 }, // Allow up to 3 files in the 'others' field
+  { name: "others", maxCount: 6 },
 ]);
 
 const dbUser = process.env.DB_USER;
@@ -45,6 +48,17 @@ async function run() {
   try {
     const applicationsCollection = client.db("applicationsDb").collection("applications");
 
+    app.get("/applications", async (req, res) => {
+      const cursor = applicationsCollection.find({status: {$eq: "pending"}});
+      try {
+        const result = await cursor.toArray();
+        res.send(result);
+      } catch (error) {
+        res.status(500).send(error.message);
+      }
+  })
+    
+
     app.post("/applications", fileUpload, async (req, res) => {
       const applications = req.body;
       const image = req.files['mainFile'][0];
@@ -54,8 +68,8 @@ async function run() {
         const imagePaths = images.map((image) => image.path);
         const result = await applicationsCollection.insertOne({
           ...applications,
-          image: image.path, // Use the correct image path
-          others: imagePaths, // Store multiple file paths in 'others'
+          image: image.path, 
+          others: imagePaths, 
         });
         res.send(result);
       } catch (error) {
