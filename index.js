@@ -51,30 +51,20 @@ async function run() {
     });
 
     app.get('/applications/:id', async (req, res) => {
-      const id = req.params.id;
+      if (!ObjectId.isValid(id)) {
+        return res.status(400).send('Invalid ObjectId');
+      }
+
       const query = { _id: new ObjectId(id) };
       const result = await applicationsCollection.find(query).toArray();
       res.send(result);
     });
 
-    app.get('/applications/pending', async (req, res) => {
-      const cursor = applicationsCollection.find({ status: { $eq: 'pending' } });
-      try {
-        const result = await cursor.toArray();
-        res.send(result);
-      } catch (error) {
-        res.status(500).send(error.message);
-      }
-    });
-
-    app.get('/applications/active', async (req, res) => {
-      const cursor = applicationsCollection.find({ status: { $eq: 'active' } });
-      try {
-        const result = await cursor.toArray();
-        res.send(result);
-      } catch (error) {
-        res.status(500).send(error.message);
-      }
+    app.get('/pending', async (req, res) => {
+      const query = { status: 'pending' };
+      const cursor = applicationsCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
     });
 
     app.post('/applications', fileUpload, async (req, res) => {
@@ -108,8 +98,8 @@ async function run() {
         },
       };
       const result = await applicationsCollection.updateOne(filter, request, options);
-      console.log(result);
-      res.send(result);
+      const latestRequest = await applicationsCollection.find(filter).toArray();
+      res.send({ result, latestRequest });
     });
 
     await client.connect();
