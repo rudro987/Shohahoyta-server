@@ -12,8 +12,6 @@ app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 
-
-
 const UPLOAD_FOLDER = './uploads/';
 
 const upload = multer({
@@ -30,7 +28,7 @@ const upload = multer({
 
 const fileUpload = upload.fields([
   { name: 'mainFile', maxCount: 1 },
-  { name: 'others', maxCount: 6 },
+  { name: 'others', maxCount: 3 },
 ]);
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster1.uviemuc.mongodb.net/applicationsDb?retryWrites=true&w=majority`;
@@ -51,6 +49,7 @@ async function run() {
       const result = await applicationsCollection.find().toArray();
       res.send(result);
     });
+
 
     app.get('/applications/:id', async (req, res) => {
       const id = req.params.id;
@@ -104,6 +103,7 @@ async function run() {
       const request = {
         $set: {
           status: updateRequest.status,
+          date: updateRequest.date,
         },
       };
       const result = await applicationsCollection.updateOne(filter, request, options);
