@@ -3,6 +3,7 @@ const path = require('path');
 const cors = require('cors');
 const multer = require('multer');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const { log } = require('console');
 require('dotenv').config();
 
 const app = express();
@@ -46,7 +47,7 @@ async function run() {
     const applicationsCollection = client.db('applicationsDb').collection('applications');
 
     app.get('/applications', async (req, res) => {
-      const result = await applicationsCollection.find().sort({createdAt: -1}).toArray();
+      const result = await applicationsCollection.find().sort({createdAt: 1}).toArray();
       res.send(result);
     });
 
@@ -81,8 +82,8 @@ async function run() {
       const serverAddress = `${req.protocol}://${req.get('host')}/`;
       const image = serverAddress + req.files['mainFile'][0].path.replace(/\\/g, '/');
       const images = req.files['others'];
-      const imagesPath = images.map((image) => serverAddress + image.path.replace(/\\/g, '/'));
-
+      const imagesPath = images?.map((image) => serverAddress + image.path.replace(/\\/g, '/'));
+      
       try {
         const result = await applicationsCollection.insertOne({
           ...applications,
