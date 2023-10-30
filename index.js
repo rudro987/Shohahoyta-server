@@ -68,6 +68,13 @@ async function run() {
       res.send(result);
     });
 
+    app.get('/approved', async (req, res) => {
+      const query = { status: 'approved' };
+      const cursor = applicationsCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
     app.post('/applications', fileUpload, async (req, res) => {
       const applications = req.body;
       const serverAddress = `${req.protocol}://${req.get('host')}/`;
