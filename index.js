@@ -65,7 +65,7 @@ async function run() {
       const images = req.files['others'];
 
       try {
-        const imagePaths = images.map((image) => image.path);
+        const imagePaths = images?.map((image) => image.path);
         const result = await applicationsCollection.insertOne({
           ...applications,
           image: image.path, 
