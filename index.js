@@ -46,10 +46,9 @@ async function run() {
     const applicationsCollection = client.db('applicationsDb').collection('applications');
 
     app.get('/applications', async (req, res) => {
-      const result = await applicationsCollection.find().sort({createdAt: -1}).toArray();
+      const result = await applicationsCollection.find().sort({ createdAt: -1 }).toArray();
       res.send(result);
     });
-
 
     app.get('/applications/:id', async (req, res) => {
       const id = req.params.id;
@@ -81,7 +80,7 @@ async function run() {
       const serverAddress = `${req.protocol}://${req.get('host')}/`;
       const image = serverAddress + req.files['mainFile'][0].path.replace(/\\/g, '/');
       const images = req.files['others'];
-      const imagesPath = images.map((image) => serverAddress + image.path.replace(/\\/g, '/'));
+      const imagesPath = images?.map((image) => serverAddress + image.path.replace(/\\/g, '/'));
 
       try {
         const result = await applicationsCollection.insertOne({
@@ -112,7 +111,7 @@ async function run() {
       res.send({ result, latestRequest });
     });
 
-    await client.connect();
+    // await client.connect();
     await client.db('admin').command({ ping: 1 });
     console.log('Pinged your deployment. You successfully connected to MongoDB!');
   } finally {
