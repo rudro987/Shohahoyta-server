@@ -46,7 +46,7 @@ async function run() {
     const applicationsCollection = client.db('applicationsDb').collection('applications');
 
     app.get('/applications', async (req, res) => {
-      const result = await applicationsCollection.find().toArray();
+      const result = await applicationsCollection.find().sort({createdAt: -1}).toArray();
       res.send(result);
     });
 
@@ -88,6 +88,7 @@ async function run() {
           ...applications,
           image: image,
           others: imagesPath,
+          createdAt: new Date(),
         });
         res.send(result);
       } catch (error) {
