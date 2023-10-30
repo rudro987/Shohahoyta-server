@@ -51,6 +51,7 @@ async function run() {
     });
 
     app.get('/applications/:id', async (req, res) => {
+      const id = req.params.id;
       if (!ObjectId.isValid(id)) {
         return res.status(400).send('Invalid ObjectId');
       }
@@ -62,6 +63,13 @@ async function run() {
 
     app.get('/pending', async (req, res) => {
       const query = { status: 'pending' };
+      const cursor = applicationsCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    app.get('/approved', async (req, res) => {
+      const query = { status: 'approved' };
       const cursor = applicationsCollection.find(query);
       const result = await cursor.toArray();
       res.send(result);
