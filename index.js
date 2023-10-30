@@ -97,6 +97,21 @@ async function run() {
       }
     });
 
+    app.put('/applications/:id', async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateRequest = req.body;
+      const request = {
+        $set: {
+          status: updateRequest.status,
+        },
+      };
+      const result = await applicationsCollection.updateOne(filter, request, options);
+      console.log(result);
+      res.send(result);
+    });
+
     await client.connect();
     await client.db('admin').command({ ping: 1 });
     console.log('Pinged your deployment. You successfully connected to MongoDB!');
