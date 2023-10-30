@@ -51,6 +51,7 @@ async function run() {
     });
 
     app.get('/applications/:id', async (req, res) => {
+      const id = req.params.id;
       if (!ObjectId.isValid(id)) {
         return res.status(400).send('Invalid ObjectId');
       }
