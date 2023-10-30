@@ -12,6 +12,8 @@ app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 
+
+
 const UPLOAD_FOLDER = './uploads/';
 
 const upload = multer({
@@ -83,7 +85,6 @@ async function run() {
       const imagesPath = images.map((image) => serverAddress + image.path.replace(/\\/g, '/'));
 
       try {
-        const imagePaths = images?.map((image) => image.path);
         const result = await applicationsCollection.insertOne({
           ...applications,
           image: image,
