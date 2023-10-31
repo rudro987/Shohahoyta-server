@@ -3,7 +3,6 @@ const path = require('path');
 const cors = require('cors');
 const multer = require('multer');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-const { log } = require('console');
 require('dotenv').config();
 
 const app = express();
@@ -11,21 +10,11 @@ const port = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
-app.use('/uploads', express.static('uploads'));
+// app.use('./uploads/', express.static('uploads'));
 
 const UPLOAD_FOLDER = './uploads/';
 
-const upload = multer({
-  storage: multer.diskStorage({
-    destination: function (req, file, cb) {
-      cb(null, UPLOAD_FOLDER);
-    },
-    filename: function (req, file, cb) {
-      const modifiedFileName = file.originalname.replace(/\s+/g, '_');
-      cb(null, `${Date.now()}_${Math.round(Math.random() * 1e9)}_${modifiedFileName}`);
-    },
-  }),
-});
+const upload = multer()
 
 const fileUpload = upload.fields([
   { name: 'mainFile', maxCount: 1 },
@@ -47,7 +36,7 @@ async function run() {
     const applicationsCollection = client.db('applicationsDb').collection('applications');
 
     app.get('/applications', async (req, res) => {
-      const result = await applicationsCollection.find().sort({createdAt: 1}).toArray();
+      const result = await applicationsCollection.find().toArray();
       res.send(result);
     });
 
@@ -78,21 +67,12 @@ async function run() {
     });
 
     app.post('/applications', fileUpload, async (req, res) => {
-      const applications = req.body;
-      const serverAddress = `${req.protocol}://${req.get('host')}/`;
-      const image = serverAddress + req.files['mainFile'][0].path.replace(/\\/g, '/');
-      const images = req.files['others'];
-      const imagesPath = images?.map((image) => serverAddress + image.path.replace(/\\/g, '/'));
-      
+      const applications = req.body;  
       try {
-        const result = await applicationsCollection.insertOne({
-          ...applications,
-          image: image,
-          others: imagesPath,
-          createdAt: new Date(),
-        });
+        const result = await applicationsCollection.insertOne(applications);
         res.send(result);
       } catch (error) {
+        console.log(error)
         res.status(400).send(error.message);
       }
     });
