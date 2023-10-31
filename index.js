@@ -33,9 +33,10 @@ async function run() {
     const applicationsCollection = client.db('applicationsDb').collection('applications');
 
     app.get('/applications', async (req, res) => {
-      const result = await applicationsCollection.find().sort({ createdAt: 1 }).toArray();
+      const result = await applicationsCollection.find().toArray();
       res.send(result);
     });
+
 
     app.get('/applications/:id', async (req, res) => {
       const id = req.params.id;
@@ -63,19 +64,9 @@ async function run() {
     });
 
     app.post('/applications', fileUpload, async (req, res) => {
-      const applications = req.body;
-      const serverAddress = `${req.protocol}://${req.get('host')}/`;
-      const image = serverAddress + req.files['mainFile'][0].path.replace(/\\/g, '/');
-      const images = req.files['others'];
-      const imagesPath = images?.map((image) => serverAddress + image.path.replace(/\\/g, '/'));
-      
+      const applications = req.body;  
       try {
-        const result = await applicationsCollection.insertOne({
-          ...applications,
-          image: image,
-          others: imagesPath,
-          createdAt: new Date(),
-        });
+        const result = await applicationsCollection.insertOne(applications);
         res.send(result);
       } catch (error) {
         console.log(error)
