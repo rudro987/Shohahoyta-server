@@ -2,7 +2,6 @@ const express = require('express');
 const path = require('path');
 const cors = require('cors');
 const multer = require('multer');
-const uuid = require('uuid').v4;
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 
@@ -11,22 +10,25 @@ const port = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
+app.use('./uploads/', express.static('uploads'));
 
-const storage = multer.diskStorage({
-  destination: (req, res, cb) => {
-    cb(null, 'uploads');
-  },
-  filename: (req, file, cb) => {
-    const { originalname } = file;
-    cb(null, `${uuid()}-${originalname}`);
-  },
+const UPLOAD_FOLDER = './uploads/';
+
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, UPLOAD_FOLDER);
+    },
+    filename: function (req, file, cb) {
+      const modifiedFileName = file.originalname.replace(/\s+/g, '_');
+      cb(null, `${Date.now()}_${Math.round(Math.random() * 1e9)}_${modifiedFileName}`);
+    },
+  }),
 });
 
-const upload = multer({ storage });
-
-const multiUpload = upload.fields([
-  { name: 'coverPhoto', maxCount: 1 },
-  { name: 'gallery', maxCount: 3 },
+const fileUpload = upload.fields([
+  { name: 'mainFile', maxCount: 1 },
+  { name: 'others', maxCount: 3 },
 ]);
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster1.uviemuc.mongodb.net/applicationsDb?retryWrites=true&w=majority`;
@@ -42,10 +44,6 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     const applicationsCollection = client.db('applicationsDb').collection('applications');
-
-    app.post('/submission', multiUpload, async (req, res) => {
-      res.send({ status: 'success' });
-    });
 
     app.get('/applications', async (req, res) => {
       const result = await applicationsCollection.find().sort({ createdAt: 1 }).toArray();
@@ -77,27 +75,27 @@ async function run() {
       res.send(result);
     });
 
-    // app.post('/applications', fileUpload, async (req, res) => {
-    //   const applications = req.body;
-    //   const serverAddress = `${req.protocol}://${req.get('host')}/`;
-    //   const image = serverAddress + req.files['mainFile'][0].path.replace(/\\/g, '/');
-    //   console.log(req.files['mainFile'][0]);
-    //   const images = req.files['others'];
-    //   const imagesPath = images?.map((image) => serverAddress + image.path.replace(/\\/g, '/'));
+    app.post('/applications', fileUpload, async (req, res) => {
+      const applications = req.body;
+      const serverAddress = `${req.protocol}://${req.get('host')}/`;
+      const image = serverAddress + req.files['mainFile'][0].path.replace(/\\/g, '/');
+      console.log(req.files['mainFile'][0]);
+      const images = req.files['others'];
+      const imagesPath = images?.map((image) => serverAddress + image.path.replace(/\\/g, '/'));
 
-    //   try {
-    //     const result = await applicationsCollection.insertOne({
-    //       ...applications,
-    //       image: image,
-    //       others: imagesPath,
-    //       createdAt: new Date(),
-    //     });
-    //     res.send(result);
-    //   } catch (error) {
-    //     console.log(error);
-    //     res.status(400).send(error.message);
-    //   }
-    // });
+      try {
+        const result = await applicationsCollection.insertOne({
+          ...applications,
+          image: image,
+          others: imagesPath,
+          createdAt: new Date(),
+        });
+        res.send(result);
+      } catch (error) {
+        console.log(error);
+        res.status(400).send(error.message);
+      }
+    });
 
     app.put('/applications/:id', async (req, res) => {
       const id = req.params.id;
