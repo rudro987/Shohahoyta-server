@@ -10,8 +10,21 @@ const port = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
+app.use('./uploads/', express.static('uploads'));
 
-const upload = multer();
+const UPLOAD_FOLDER = './uploads/';
+
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, UPLOAD_FOLDER);
+    },
+    filename: function (req, file, cb) {
+      const modifiedFileName = file.originalname.replace(/\s+/g, '_');
+      cb(null, `${Date.now()}_${Math.round(Math.random() * 1e9)}_${modifiedFileName}`);
+    },
+  }),
+});
 
 const fileUpload = upload.fields([
   { name: 'mainFile', maxCount: 1 },
@@ -33,26 +46,9 @@ async function run() {
     const applicationsCollection = client.db('applicationsDb').collection('applications');
 
     app.get('/applications', async (req, res) => {
-      const result = await applicationsCollection.find().toArray();
+      const result = await applicationsCollection.find().sort({ createdAt: 1 }).toArray();
       res.send(result);
     });
-
-    app.get('/checkApplicants', async (req, res) => {
-      const urlQuery = req.query?.phone;
-      const query = { phone: urlQuery };
-      const result = await applicationsCollection.findOne(query);
-      if (result) res.send('present');
-      else res.send('absent');
-    });
-
-    app.get('/searchResult', async (req, res) => {
-      const urlQuery = req.query?.search;
-      const query = { name: { $regex: `.*${urlQuery}.*`, $options: 'i' } };
-      const result = await applicationsCollection.find(query).toArray();
-      res.send(result);
-    });
-
-    app.get('/applications/count', async (req, res) => {});
 
     app.get('/applications/:id', async (req, res) => {
       const id = req.params.id;
@@ -81,8 +77,19 @@ async function run() {
 
     app.post('/applications', fileUpload, async (req, res) => {
       const applications = req.body;
+      const serverAddress = `${req.protocol}://${req.get('host')}/`;
+      const image = serverAddress + req.files['mainFile'][0].path.replace(/\\/g, '/');
+      console.log(req.files['mainFile'][0]);
+      const images = req.files['others'];
+      const imagesPath = images?.map((image) => serverAddress + image.path.replace(/\\/g, '/'));
+
       try {
-        const result = await applicationsCollection.insertOne(applications);
+        const result = await applicationsCollection.insertOne({
+          ...applications,
+          image: image,
+          others: imagesPath,
+          createdAt: new Date(),
+        });
         res.send(result);
       } catch (error) {
         console.log(error);
@@ -95,13 +102,10 @@ async function run() {
       const filter = { _id: new ObjectId(id) };
       const options = { upsert: true };
       const updateRequest = req.body;
-      updateRequest.amount = parseInt(updateRequest.amount);
       const request = {
         $set: {
           status: updateRequest.status,
           date: updateRequest.date,
-          amount: updateRequest.amount,
-          area: updateRequest.area
         },
       };
       const result = await applicationsCollection.updateOne(filter, request, options);
@@ -109,7 +113,7 @@ async function run() {
       res.send({ result, latestRequest });
     });
 
-    // await client.connect();
+    await client.connect();
     await client.db('admin').command({ ping: 1 });
     console.log('Pinged your deployment. You successfully connected to MongoDB!');
   } finally {
