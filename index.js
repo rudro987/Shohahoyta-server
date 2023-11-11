@@ -11,7 +11,7 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-const upload = multer()
+const upload = multer();
 
 const fileUpload = upload.fields([
   { name: 'mainFile', maxCount: 1 },
@@ -79,10 +79,13 @@ async function run() {
       const filter = { _id: new ObjectId(id) };
       const options = { upsert: true };
       const updateRequest = req.body;
+      updateRequest.amount = parseInt(updateRequest.amount);
       const request = {
         $set: {
           status: updateRequest.status,
           date: updateRequest.date,
+          amount: updateRequest.amount,
+          area: updateRequest.area
         },
       };
       const result = await applicationsCollection.updateOne(filter, request, options);
