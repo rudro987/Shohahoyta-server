@@ -96,10 +96,13 @@ async function run() {
       const filter = { _id: new ObjectId(id) };
       const options = { upsert: true };
       const updateRequest = req.body;
+      updateRequest.amount = parseInt(updateRequest.amount);
       const request = {
         $set: {
           status: updateRequest.status,
           date: updateRequest.date,
+          amount: updateRequest.amount,
+          area: updateRequest.area
         },
       };
       const result = await applicationsCollection.updateOne(filter, request, options);
