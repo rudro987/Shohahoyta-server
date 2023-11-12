@@ -47,6 +47,7 @@ async function run() {
 
     app.get('/searchResult', async (req, res) => {
       const urlQuery = req.query?.search;
+      console.log(urlQuery);
       const query = { name: { $regex: `.*${urlQuery}.*`, $options: 'i' } };
       const result = await applicationsCollection.find(query).toArray();
       res.send(result);
@@ -104,6 +105,23 @@ async function run() {
       const result = await applicationsCollection.updateOne(filter, request, options);
       const latestRequest = await applicationsCollection.find(filter).toArray();
       res.send({ result, latestRequest });
+    });
+
+    app.get('/paginated-requests', async (req, res) => {
+      const page = parseInt(req.query.page) || 1;
+      const size = 2;
+      const startIndex = (page - 1) * size;
+      try {
+        const total = await applicationsCollection.estimatedDocumentCount();
+        const result = await applicationsCollection.find().skip(startIndex).limit(size).toArray();
+        res.json({
+          items: total,
+          data: result,
+        });
+      } catch (error) {
+        console.log('Error fetching paginated Data from MongoDB', error);
+        res.status(500).send(error.message);
+      }
     });
 
     // await client.connect();
