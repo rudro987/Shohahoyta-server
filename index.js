@@ -75,7 +75,7 @@ async function run() {
 
     app.get('/approved', async (req, res) => {
       const { status } = req.query;
-    
+
       if (status) {
         const query = { status: 'approved' };
         const projection = { status: 1, _id: 0 };
@@ -83,7 +83,7 @@ async function run() {
         const result = await cursor.toArray();
         res.send(result);
       } else {
-        const query = { status: 'approved' }; 
+        const query = { status: 'approved' };
         const cursor = applicationsCollection.find(query);
         const result = await cursor.toArray();
         res.send(result);
@@ -107,7 +107,7 @@ async function run() {
       const options = { upsert: true };
       const updateRequest = req.body;
       updateRequest.amount = parseInt(updateRequest.amount);
-      updateRequest.amountBangla = parseInt(updateRequest.amountBangla)
+      updateRequest.amountBangla = parseInt(updateRequest.amountBangla);
       console.log(updateRequest);
       const request = {
         $set: {
@@ -116,7 +116,7 @@ async function run() {
           amountBangla: updateRequest.amountBangla,
           area: updateRequest.area,
           areaBangla: updateRequest.areaBangla,
-          approveDate: updateRequest.formatedDate
+          approveDate: updateRequest.formatedDate,
         },
       };
       const result = await applicationsCollection.updateOne(filter, request, options);
@@ -126,12 +126,16 @@ async function run() {
 
     app.get('/paginated-requests', async (req, res) => {
       const page = parseInt(req.query.page) || 1;
+      const status = req.query.status;
       const size = 2;
+      const query = { status };
       const startIndex = (page - 1) * size;
       try {
+        const queryTotal = await applicationsCollection.countDocuments(query);
         const total = await applicationsCollection.estimatedDocumentCount();
-        const result = await applicationsCollection.find().skip(startIndex).limit(size).toArray();
+        const result = await (status ? applicationsCollection.find(query).skip(startIndex).limit(size).toArray() : applicationsCollection.find().skip(startIndex).limit(size).toArray());
         res.json({
+          queryTotal: queryTotal,
           items: total,
           data: result,
         });
