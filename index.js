@@ -73,10 +73,20 @@ async function run() {
     });
 
     app.get('/approved', async (req, res) => {
-      const query = { status: 'approved' };
-      const cursor = applicationsCollection.find(query);
-      const result = await cursor.toArray();
-      res.send(result);
+      const { status } = req.query;
+    
+      if (status) {
+        const query = { status: 'approved' };
+        const projection = { status: 1, _id: 0 };
+        const cursor = applicationsCollection.find(query, projection);
+        const result = await cursor.toArray();
+        res.send(result);
+      } else {
+        const query = { status: 'approved' }; 
+        const cursor = applicationsCollection.find(query);
+        const result = await cursor.toArray();
+        res.send(result);
+      }
     });
 
     app.post('/applications', fileUpload, async (req, res) => {
@@ -96,12 +106,16 @@ async function run() {
       const options = { upsert: true };
       const updateRequest = req.body;
       updateRequest.amount = parseInt(updateRequest.amount);
+      updateRequest.amountBangla = parseInt(updateRequest.amountBangla)
+      console.log(updateRequest);
       const request = {
         $set: {
           status: updateRequest.status,
-          date: updateRequest.date,
           amount: updateRequest.amount,
-          area: updateRequest.area
+          amountBangla: updateRequest.amountBangla,
+          area: updateRequest.area,
+          areaBangla: updateRequest.areaBangla,
+          approveDate: updateRequest.formatedDate
         },
       };
       const result = await applicationsCollection.updateOne(filter, request, options);
