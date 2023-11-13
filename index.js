@@ -144,7 +144,7 @@ async function run() {
     app.get('/paginated-requests', async (req, res) => {
       const page = parseInt(req.query.page) || 1;
       const status = req.query.status;
-      const size = 5;
+      const size = 20;
       const query = { status };
       const startIndex = (page - 1) * size;
       try {
@@ -160,6 +160,11 @@ async function run() {
         console.log('Error fetching paginated Data from MongoDB', error);
         res.status(500).send(error.message);
       }
+    });
+
+    app.delete('/hudayDelete', async (req, res) => {
+      const result = await applicationsCollection.deleteMany({ status: 'approved' });
+      res.send(result);
     });
 
     // await client.connect();
