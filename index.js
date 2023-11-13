@@ -72,21 +72,37 @@ async function run() {
     });
 
     app.get('/approved', async (req, res) => {
-        const query = { status: 'approved' }; 
-        const cursor = applicationsCollection.find(query);
-        const result = await cursor.toArray();
-        res.send(result);
+      const query = { status: 'approved' };
+      const cursor = applicationsCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
     });
 
-
     app.get('/approvedStatus', async (req, res) => {
-        const query = { status: 'approved' }; 
-        const options = {
-          projection : { amount: 1, area: 1, areaBangla: 1, approveDate: 1, approveBanglaDate: 1, _id: 0}
-        }
-        const cursor = applicationsCollection.find(query, options);
-        const result = await cursor.toArray();
-        res.send(result);
+      const query = { status: 'approved' };
+      const options = {
+        projection: { amount: 1, area: 1, areaBangla: 1, approveDate: 1, approveBanglaDate: 1, _id: 0 },
+      };
+      const cursor = applicationsCollection.find(query, options);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    app.get('/slider', async (req, res) => {
+      const query = { status: 'approved' };
+      const options = {
+        sort: { approveDate: -1 },
+        projection: {
+          _id: 0,
+          amount: 1,
+          approveBanglaDate: 1,
+          approveDate: 1,
+          area: 1,
+          areaBangla: 1,
+        },
+      };
+      const result = await applicationsCollection.find(query, options).limit(12).toArray();
+      res.send(result);
     });
 
     app.post('/applications', fileUpload, async (req, res) => {
@@ -115,7 +131,7 @@ async function run() {
           area: updateRequest.area,
           areaBangla: updateRequest.areaBangla,
           approveDate: updateRequest.formatedDate,
-          approveBanglaDate: updateRequest.formatedBanglaDate
+          approveBanglaDate: updateRequest.formatedBanglaDate,
         },
       };
       const result = await applicationsCollection.updateOne(filter, request, options);
@@ -125,12 +141,16 @@ async function run() {
 
     app.get('/paginated-requests', async (req, res) => {
       const page = parseInt(req.query.page) || 1;
-      const size = 2;
+      const status = req.query.status;
+      const size = 20;
+      const query = { status };
       const startIndex = (page - 1) * size;
       try {
+        const queryTotal = await applicationsCollection.countDocuments(query);
         const total = await applicationsCollection.estimatedDocumentCount();
-        const result = await applicationsCollection.find().skip(startIndex).limit(size).toArray();
+        const result = await (status ? applicationsCollection.find(query).skip(startIndex).limit(size).toArray() : applicationsCollection.find().skip(startIndex).limit(size).toArray());
         res.json({
+          queryTotal: queryTotal,
           items: total,
           data: result,
         });
@@ -138,6 +158,11 @@ async function run() {
         console.log('Error fetching paginated Data from MongoDB', error);
         res.status(500).send(error.message);
       }
+    });
+
+    app.delete('/hudayDelete', async (req, res) => {
+      const result = await applicationsCollection.deleteMany({ status: 'approved' });
+      res.send(result);
     });
 
     // await client.connect();
