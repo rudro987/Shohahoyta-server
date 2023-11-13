@@ -74,20 +74,20 @@ async function run() {
     });
 
     app.get('/approved', async (req, res) => {
-      const { status } = req.query;
+      const query = { status: 'approved' };
+      const cursor = applicationsCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
 
-      if (status) {
-        const query = { status: 'approved' };
-        const projection = { status: 1, _id: 0 };
-        const cursor = applicationsCollection.find(query, projection);
-        const result = await cursor.toArray();
-        res.send(result);
-      } else {
-        const query = { status: 'approved' };
-        const cursor = applicationsCollection.find(query);
-        const result = await cursor.toArray();
-        res.send(result);
-      }
+    app.get('/approvedStatus', async (req, res) => {
+      const query = { status: 'approved' };
+      const options = {
+        projection: { amount: 1, area: 1, areaBangla: 1, approveDate: 1, approveBanglaDate: 1, _id: 0 },
+      };
+      const cursor = applicationsCollection.find(query, options);
+      const result = await cursor.toArray();
+      res.send(result);
     });
 
     app.get('/slider', async (req, res) => {
@@ -124,7 +124,6 @@ async function run() {
       const options = { upsert: true };
       const updateRequest = req.body;
       updateRequest.amount = parseInt(updateRequest.amount);
-      updateRequest.amountBangla = parseInt(updateRequest.amountBangla);
       console.log(updateRequest);
       const request = {
         $set: {
@@ -134,6 +133,7 @@ async function run() {
           area: updateRequest.area,
           areaBangla: updateRequest.areaBangla,
           approveDate: updateRequest.formatedDate,
+          approveBanglaDate: updateRequest.formatedBanglaDate,
         },
       };
       const result = await applicationsCollection.updateOne(filter, request, options);
