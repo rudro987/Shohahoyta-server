@@ -33,7 +33,7 @@ async function run() {
     const applicationsCollection = client.db('applicationsDb').collection('applications');
 
     app.get('/applications', async (req, res) => {
-      const result = await applicationsCollection.find().toArray();
+      const result = await applicationsCollection.find().sort({ submissionDate: -1 }).toArray();
       res.send(result);
     });
 
@@ -66,14 +66,14 @@ async function run() {
 
     app.get('/pending', async (req, res) => {
       const query = { status: 'pending' };
-      const cursor = applicationsCollection.find(query);
+      const cursor = applicationsCollection.find(query).sort({ submissionDate: -1 });
       const result = await cursor.toArray();
       res.send(result);
     });
 
     app.get('/approved', async (req, res) => {
       const query = { status: 'approved' };
-      const cursor = applicationsCollection.find(query);
+      const cursor = applicationsCollection.find(query).sort({ submissionDate: -1 });
       const result = await cursor.toArray();
       res.send(result);
     });
@@ -83,7 +83,7 @@ async function run() {
       const options = {
         projection: { amount: 1, area: 1, areaBangla: 1, approveDate: 1, approveBanglaDate: 1, _id: 0 },
       };
-      const cursor = applicationsCollection.find(query, options);
+      const cursor = applicationsCollection.find(query, options).sort({ submissionDate: -1 });
       const result = await cursor.toArray();
       res.send(result);
     });
@@ -148,7 +148,7 @@ async function run() {
       try {
         const queryTotal = await applicationsCollection.countDocuments(query);
         const total = await applicationsCollection.estimatedDocumentCount();
-        const result = await (status ? applicationsCollection.find(query).skip(startIndex).limit(size).toArray() : applicationsCollection.find().skip(startIndex).limit(size).toArray());
+        const result = await (status ? applicationsCollection.find(query).sort({ submissionDate: -1 }).skip(startIndex).limit(size).toArray() : applicationsCollection.find().sort({ submissionDate: -1 }).skip(startIndex).limit(size).toArray());
         res.json({
           queryTotal: queryTotal,
           items: total,
