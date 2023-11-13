@@ -90,6 +90,23 @@ async function run() {
       }
     });
 
+    app.get('/slider', async (req, res) => {
+      const query = { status: 'approved' };
+      const options = {
+        sort: { approveDate: -1 },
+        projection: {
+          _id: 0,
+          amount: 1,
+          approveBanglaDate: 1,
+          approveDate: 1,
+          area: 1,
+          areaBangla: 1,
+        },
+      };
+      const result = await applicationsCollection.find(query, options).limit(12).toArray();
+      res.send(result);
+    });
+
     app.post('/applications', fileUpload, async (req, res) => {
       const applications = req.body;
       try {
@@ -127,7 +144,7 @@ async function run() {
     app.get('/paginated-requests', async (req, res) => {
       const page = parseInt(req.query.page) || 1;
       const status = req.query.status;
-      const size = 2;
+      const size = 5;
       const query = { status };
       const startIndex = (page - 1) * size;
       try {
