@@ -122,12 +122,10 @@ async function run() {
       const options = { upsert: true };
       const updateRequest = req.body;
       updateRequest.amount = parseInt(updateRequest.amount);
-      console.log(updateRequest);
       const request = {
         $set: {
           status: updateRequest.status,
           amount: updateRequest.amount,
-          amountBangla: updateRequest.amountBangla,
           area: updateRequest.area,
           areaBangla: updateRequest.areaBangla,
           approveDate: updateRequest.formatedDate,
