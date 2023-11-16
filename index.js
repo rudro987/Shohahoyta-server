@@ -122,14 +122,14 @@ async function run() {
       const options = { upsert: true };
       const updateRequest = req.body;
       updateRequest.amount = parseInt(updateRequest.amount);
-      console.log(updateRequest);
       const request = {
         $set: {
           status: updateRequest.status,
           amount: updateRequest.amount,
-          amountBangla: updateRequest.amountBangla,
           area: updateRequest.area,
           areaBangla: updateRequest.areaBangla,
+          reason: updateRequest.reason,
+          reasonBangla: updateRequest.reasonBangla,
           approveDate: updateRequest.formatedDate,
           approveBanglaDate: updateRequest.formatedBanglaDate,
         },
@@ -148,7 +148,9 @@ async function run() {
       try {
         const queryTotal = await applicationsCollection.countDocuments(query);
         const total = await applicationsCollection.estimatedDocumentCount();
-        const result = await (status ? applicationsCollection.find(query).sort({ submissionDate: -1 }).skip(startIndex).limit(size).toArray() : applicationsCollection.find().sort({ submissionDate: -1 }).skip(startIndex).limit(size).toArray());
+        const result = await (status
+          ? applicationsCollection.find(query).sort({ submissionDate: -1 }).skip(startIndex).limit(size).toArray()
+          : applicationsCollection.find().sort({ submissionDate: -1 }).skip(startIndex).limit(size).toArray());
         res.json({
           queryTotal: queryTotal,
           items: total,
