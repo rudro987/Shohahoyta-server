@@ -101,7 +101,7 @@ async function run() {
           areaBangla: 1,
         },
       };
-      const result = await applicationsCollection.find(query, options).limit(12).toArray();
+      const result = await applicationsCollection.find(query, options).limit(48).toArray();
       res.send(result);
     });
 
