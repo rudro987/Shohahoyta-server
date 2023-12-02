@@ -99,10 +99,19 @@ async function run() {
           approveDate: 1,
           area: 1,
           areaBangla: 1,
+          reason: 1,
+          reasonBangla: 1,
         },
       };
       const result = await applicationsCollection.find(query, options).limit(48).toArray();
-      res.send(result);
+      if(result?.length > 0 ) {
+        result.forEach((item) => {
+          const milliseconds = new Date(item?.approveDate).getTime();
+          item['milliseconds'] = milliseconds;
+        });
+      }
+      const sortedResult =  result?.sort((a,b) => b.milliseconds - a.milliseconds);
+      res.send(sortedResult);
     });
 
     app.post('/applications', fileUpload, async (req, res) => {
