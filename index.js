@@ -6,7 +6,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 
 const app = express();
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 5002;
 
 app.use(cors());
 app.use(express.json());
@@ -99,8 +99,8 @@ async function run() {
           approveDate: 1,
           area: 1,
           areaBangla: 1,
-          reason: 1,
-          reasonBangla: 1,
+          remark: 1,
+          remarkBangla: 1,
         },
       };
       const result = await applicationsCollection.find(query, options).limit(48).toArray();
@@ -125,7 +125,7 @@ async function run() {
       }
     });
 
-    app.put('/applications/:id', async (req, res) => {
+    app.patch('/applications/:id', async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const options = { upsert: true };
@@ -137,8 +137,8 @@ async function run() {
           amount: updateRequest.amount,
           area: updateRequest.area,
           areaBangla: updateRequest.areaBangla,
-          reason: updateRequest.reason,
-          reasonBangla: updateRequest.reasonBangla,
+          remark: updateRequest.remark,
+          remarkBangla: updateRequest.remarkBangla,
           approveDate: updateRequest.formatedDate,
           approveBanglaDate: updateRequest.formatedBanglaDate,
         },
